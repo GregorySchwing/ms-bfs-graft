@@ -3,7 +3,7 @@ cc = gcc
 CFLAGS = -fopenmp -Drestrict=__restrict__ -O2 -DNDEBUG -ffast-math # -g -pg
 LDFLAGS = -O2
 
-all: msBFSGraft
+all: msBFSGraft msBFSGraft_lib.a
 
 graphgenBP.o: graphgenBP.h graphgenBP.cpp ThreadedMMReader.h
 	$(CC) $(CFLAGS) -c -o graphgenBP.o graphgenBP.cpp 
@@ -27,6 +27,12 @@ pf: pf.o  maximalMatching.o
 maximalMatching.o: maximalMatching.cpp maximalMatching.h
 	$(CC) $(CFLAGS) -c -o maximalMatching.o maximalMatching.cpp 
 
+
+msBFSGraft_lib.o: msBFSGraft_lib.cpp graphgenBP.h graphgenBP.o maximalMatching.o 
+	$(CC) $(CFLAGS) -c -o msBFSGraft_lib.o msBFSGraft_lib.cpp 
+
+msBFSGraft_lib.a: msBFSGraft_lib.o maximalMatching.o mmio.o 
+	ar rvs  msBFSGraft_lib.a msBFSGraft_lib.o graphgenBP.o mmio.o maximalMatching.o
 
 clean:
 	-rm -f msBFSGraft *.o

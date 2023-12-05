@@ -30,7 +30,7 @@ using namespace std;
 
 long* MS_BFS_Graft(graph* G, long* mateI);
 
-int main(int argc, char** argv)
+int main_lib_msbfsgraft(int argc, char** argv)
 {
 	if(argc != 3)
 	{
