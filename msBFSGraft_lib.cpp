@@ -30,7 +30,8 @@ using namespace std;
 
 long* MS_BFS_Graft(graph* G, long* mateI);
 
-int main_lib_msbfsgraft(int argc, char** argv)
+int main_lib_msbfsgraft(int argc, char *argv[], int **rows, int **cols, int **matching, int*nr_ptr, int*nc_ptr, int*nn_ptr)
+
 {
 	if(argc != 3)
 	{
@@ -61,7 +62,7 @@ int main_lib_msbfsgraft(int argc, char** argv)
     
     graph* g = (graph *) malloc(sizeof(graph));
     //graph* g1 = (graph *) malloc(sizeof(graph));
-    process_mtx_compressed(inFile, g);
+    process_mtx_compressed(inFile, g, rows, cols, matching, nr_ptr, nc_ptr, nn_ptr);
     //fast_mtx_read_build(inFile,g);  // ABAB: to replace process_mtx_compressed
     //graph* g =  swap_side(tg);
     //isEqual(g,g1);

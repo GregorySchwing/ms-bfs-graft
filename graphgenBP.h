@@ -16,6 +16,7 @@ typedef struct /* the bipartite graph data structure */
 
 
 void process_mtx_compressed(char *fname, graph* bGraph);
+void process_mtx_compressed(char *fname, graph* bGraph, int **rows, int **cols, int **matching, int*nr_ptr, int*nc_ptr, int*nn_ptr);
 void fast_mtx_read_build(char *fname, graph* bGraph);
 bool isEqual(graph* bGraph1, graph* bGraph2);
 
