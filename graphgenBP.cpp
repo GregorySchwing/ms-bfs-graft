@@ -330,10 +330,17 @@ void process_mtx_compressed(char *fname, graph* bGraph, int **rows, int **cols, 
 		if(sym == 1) //symmetric matrix
 			bGraph->m = nonZeros*2 - diag;
 		bGraph->m *= 2; // store both edges for undirected graph
+        *nn_ptr = bGraph->m;
+        *nr_ptr= numRow + numCol;
+        *nc_ptr= numRow + numCol;
 		bGraph->n = numRow + numCol;
-		bGraph->vtx_pointer = new int[bGraph->n+1];
+		*rows = new int[bGraph->n+1];
+		bGraph->vtx_pointer = *rows;
+		//bGraph->vtx_pointer = new int[bGraph->n+1];
 		bGraph->weight = new double[bGraph->m];
-		bGraph->endV = new int[bGraph->m];
+		*cols = new int[bGraph->m];
+		bGraph->endV = *cols;
+		//bGraph->endV = new int[bGraph->m];
 		bGraph->vtx_pointer[0]=0;
 		// always place the side with smaller number of virtices in the first part
 		if (numRow <= numCol)
@@ -346,7 +353,8 @@ void process_mtx_compressed(char *fname, graph* bGraph, int **rows, int **cols, 
 				if(m==3)
 					copy(graphCRSVal[i].begin(), graphCRSVal[i].end(), bGraph->weight + bGraph->vtx_pointer[i]);
 				bGraph->vtx_pointer[i+1] = bGraph->vtx_pointer[i] + graphCRSIdx[i].size();
-			}
+
+            }
 			for(j=0;j<numCol;j++,i++)
 			{
 				copy(graphCCSIdx[j].begin(), graphCCSIdx[j].end(), bGraph->endV + bGraph->vtx_pointer[i]);
