@@ -126,7 +126,7 @@ int main_lib_msbfsgraft(int argc, char *argv[], int **rows, int **cols, int **ma
     }
    */
     
-	free_graph(g);
+	//free_graph(g);
 	free(g);
 	return 0;
 }
