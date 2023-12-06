@@ -31,7 +31,7 @@ using namespace std;
 int* MS_BFS_Graft(graph* G, int* mateI);
 
 extern "C"
-int main_lib_msbfsgraft(int argc, char *argv[], int **rows, int **cols, int **matching, int*nr_ptr, int*nc_ptr, int*nn_ptr)
+int main_lib_msbfsgraft(int argc, char *argv[], int **rows, int **cols, int **matching, int*nr_ptr, int*nc_ptr, int*nn_ptr, int parallelKS)
 
 {
 	if(argc != 3)
