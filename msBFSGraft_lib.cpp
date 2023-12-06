@@ -28,7 +28,7 @@
 using namespace std;
 
 
-long* MS_BFS_Graft(graph* G, long* mateI);
+int* MS_BFS_Graft(graph* G, int* mateI);
 
 int main_lib_msbfsgraft(int argc, char *argv[], int **rows, int **cols, int **matching, int*nr_ptr, int*nc_ptr, int*nn_ptr)
 
@@ -39,13 +39,13 @@ int main_lib_msbfsgraft(int argc, char *argv[], int **rows, int **cols, int **ma
 		return -1;
 	}
     
-	long numThreads = atoi(argv[2]);
+	int numThreads = atoi(argv[2]);
     omp_set_num_threads(numThreads);
 #pragma omp parallel
     {
-        long nthreads = omp_get_num_threads();
-        long nprocs   = omp_get_num_procs();
-        long tid = omp_get_thread_num();
+        int nthreads = omp_get_num_threads();
+        int nprocs   = omp_get_num_procs();
+        int tid = omp_get_thread_num();
     }
 	
     
@@ -68,15 +68,15 @@ int main_lib_msbfsgraft(int argc, char *argv[], int **rows, int **cols, int **ma
     //isEqual(g,g1);
     
     
-    long isolated_rows = 0, isolated_cols = 0;
+    int isolated_rows = 0, isolated_cols = 0;
 #pragma omp parallel
     {
-        long tisor = 0, tisoc = 0; //thread private variables
+        int tisor = 0, tisoc = 0; //thread private variables
 #pragma omp for
-        for(long u=0; u<g->nrows; u++)
+        for(int u=0; u<g->nrows; u++)
             if(g->vtx_pointer[u+1] == g->vtx_pointer[u]) tisor++;
 #pragma omp for
-        for(long u=g->nrows; u<g->n; u++)
+        for(int u=g->nrows; u<g->n; u++)
             if(g->vtx_pointer[u+1] == g->vtx_pointer[u]) tisoc++;
 
         __sync_fetch_and_add(&isolated_rows,tisor);
@@ -98,25 +98,25 @@ int main_lib_msbfsgraft(int argc, char *argv[], int **rows, int **cols, int **ma
     
 
     
-	long NV = g-> n;
-	long nrows = g-> nrows;
-	long* unmatchedU = (long*) malloc(NV * sizeof(long));
-	long* mateI = (long*) malloc(NV * sizeof(long));
-	for(long u=0; u<NV; u++)
+	int NV = g-> n;
+	int nrows = g-> nrows;
+	int* unmatchedU = (int*) malloc(NV * sizeof(int));
+	int* mateI = (int*) malloc(NV * sizeof(int));
+	for(int u=0; u<NV; u++)
 	{
 		mateI[u] = -1;
 	}
-	long numUnmatchedU;
+	int numUnmatchedU;
 
 	numUnmatchedU = KarpSipserInitS(g, unmatchedU,  mateI); //serial version
     //numUnmatchedU = KarpSipserInit(g, unmatchedU,  mate); //parallel version
     
-    long* mate = MS_BFS_Graft(g, mateI); // result is stored in mate array
+    int* mate = MS_BFS_Graft(g, mateI); // result is stored in mate array
     
     // for scaling study
     /*
     int threads[]={1,2,4,8,15,30,60,120,240};
-    long* mate;
+    int* mate;
     for(int i=0; i<9; i++)
     {
         omp_set_num_threads(threads[i]);
@@ -134,28 +134,28 @@ int main_lib_msbfsgraft(int argc, char *argv[], int **rows, int **cols, int **ma
 
 
 
-// Parallel Disjolong BFS with tree grafting
+// Parallel Disjoint BFS with tree grafting
 
-long* MS_BFS_Graft (graph* G, long* mateI)
+int* MS_BFS_Graft (graph* G, int* mateI)
 {
     
    
     
-	const long NE = G->m; // number of edges
-	const long NV = G->n; // numver of vertices in both sides
-    const long nrows = G->nrows; // number of vertices in the left side
-	long * restrict endVertex = G->endV; // adjacency
-	long * restrict vtx_pointer = G->vtx_pointer; // adjacency pointer
+	const int NE = G->m; // number of edges
+	const int NV = G->n; // numver of vertices in both sides
+    const int nrows = G->nrows; // number of vertices in the left side
+	int * restrict endVertex = G->endV; // adjacency
+	int * restrict vtx_pointer = G->vtx_pointer; // adjacency pointer
 	
-	long* QF = (long*) malloc(NV * sizeof(long));
-    long* QFnext = (long*) malloc(NV * sizeof(long));
-	long* restrict flag = (long*) malloc(NV * sizeof(long));
-	long* restrict parent = (long*) malloc(NV * sizeof(long));
-	long* restrict leaf = (long*) malloc(NV * sizeof(long));
-    long* restrict root = (long*) malloc(NV * sizeof(long));
-	long* restrict mate = (long*) malloc(NV * sizeof(long));
-    long* unmatchedU = (long*) malloc(nrows * sizeof(long));
-    long* nextUnmatchedU = (long*) malloc(nrows * sizeof(long));
+	int* QF = (int*) malloc(NV * sizeof(int));
+    int* QFnext = (int*) malloc(NV * sizeof(int));
+	int* restrict flag = (int*) malloc(NV * sizeof(int));
+	int* restrict parent = (int*) malloc(NV * sizeof(int));
+	int* restrict leaf = (int*) malloc(NV * sizeof(int));
+    int* restrict root = (int*) malloc(NV * sizeof(int));
+	int* restrict mate = (int*) malloc(NV * sizeof(int));
+    int* unmatchedU = (int*) malloc(nrows * sizeof(int));
+    int* nextUnmatchedU = (int*) malloc(nrows * sizeof(int));
     
     
     
@@ -163,14 +163,14 @@ long* MS_BFS_Graft (graph* G, long* mateI)
     double time_start = omp_get_wtime();
     
     #define THREAD_BUF_LEN 16384
-    long numUnmatchedU = 0;
+    int numUnmatchedU = 0;
     
     // identify unmatched and non-isolated vertices from where search will begin
 #pragma omp parallel
     {
-        long kbuf=0, nbuf[THREAD_BUF_LEN];
+        int kbuf=0, nbuf[THREAD_BUF_LEN];
 #pragma omp for
-        for(long u=0; u<nrows; u++)
+        for(int u=0; u<nrows; u++)
         {
             if(mateI[u] == -1 && (vtx_pointer[u+1] > vtx_pointer[u]))
             {
@@ -180,8 +180,8 @@ long* MS_BFS_Graft (graph* G, long* mateI)
                 }
                 else
                 {
-                    long voff = __sync_fetch_and_add (&numUnmatchedU, THREAD_BUF_LEN);
-                    for (long vk = 0; vk < THREAD_BUF_LEN; ++vk)
+                    int voff = __sync_fetch_and_add (&numUnmatchedU, THREAD_BUF_LEN);
+                    for (int vk = 0; vk < THREAD_BUF_LEN; ++vk)
                         unmatchedU[voff + vk] = nbuf[vk];
                     nbuf[0] = u;
                     kbuf = 1;
@@ -195,8 +195,8 @@ long* MS_BFS_Graft (graph* G, long* mateI)
         }
         if(kbuf>0)
         {
-            long voff = __sync_fetch_and_add (&numUnmatchedU, kbuf);
-            for (long vk = 0; vk < kbuf; ++vk)
+            int voff = __sync_fetch_and_add (&numUnmatchedU, kbuf);
+            for (int vk = 0; vk < kbuf; ++vk)
                 unmatchedU[voff + vk] = nbuf[vk];
         }
         
@@ -204,7 +204,7 @@ long* MS_BFS_Graft (graph* G, long* mateI)
     
     
 #pragma omp parallel for schedule(static)
-    for(long i=0; i<nrows; i++)
+    for(int i=0; i<nrows; i++)
     {
         parent[i] = -1;
         leaf[i] = -1;
@@ -213,7 +213,7 @@ long* MS_BFS_Graft (graph* G, long* mateI)
     }
     // I separated them out so that root information for row vertices can be set earlier
 #pragma omp parallel for schedule(static)
-    for(long i=nrows; i<NV; i++)
+    for(int i=nrows; i<NV; i++)
     {
         parent[i] = -1;
         leaf[i] = -1;
@@ -224,19 +224,19 @@ long* MS_BFS_Graft (graph* G, long* mateI)
 
     // prepare frontier for the first iteration.
 #pragma omp parallel for schedule(static)
-	for(long i=0; i<numUnmatchedU; i++) // &&
+	for(int i=0; i<numUnmatchedU; i++) // &&
 	{
-		long u  = unmatchedU[i];
+		int u  = unmatchedU[i];
         QF[i] = u;
         unmatchedU[i] = u;
 	}
     
     
-    long QFsize = numUnmatchedU;
-    long QRsize = NV-nrows;
-    long total_aug_path_len=0, total_aug_path_count=0;
-    long edgeVisited = 0;
-    long eFwdAll=0, eRevAll = 0, eGraftAll=0;
+    int QFsize = numUnmatchedU;
+    int QRsize = NV-nrows;
+    int total_aug_path_len=0, total_aug_path_count=0;
+    int edgeVisited = 0;
+    int eFwdAll=0, eRevAll = 0, eGraftAll=0;
     double timeFwdAll=0, timeRevAll=0, timeGraftAll = 0, timeAugmentAll=0, timeStatAll=0;
 
     printf("\n************* Starting MS-BFS-Graft Algorithm  *************\n");
@@ -247,23 +247,23 @@ long* MS_BFS_Graft (graph* G, long* mateI)
     printf("============================================================================\n");
 
     
-	long iteration = 1;
-	long matched = 1;
+	int iteration = 1;
+	int matched = 1;
 	while(matched)
 	{
         double time_phase = omp_get_wtime();
         double timeFwd=0, timeRev=0;
-        long  phaseEdgeVisited = 0;
-        long curLayer = 0;
-        long QFnextSize = 0;
-        long eFwd=0, eRev = 0;
-        long eFwdFrontier = 0;
+        int  phaseEdgeVisited = 0;
+        int curLayer = 0;
+        int QFnextSize = 0;
+        int eFwd=0, eRev = 0;
+        int eFwdFrontier = 0;
         double tsLayer;
         
         // Step 1: BFS
 #pragma omp parallel
         {
-            long kbuf, nbuf[THREAD_BUF_LEN]; // temporary thread private Queue buffer
+            int kbuf, nbuf[THREAD_BUF_LEN]; // temporary thread private Queue buffer
             while(QFsize > 0)
             {
                 bool isTopdownBFS = true;
@@ -283,19 +283,19 @@ long* MS_BFS_Graft (graph* G, long* mateI)
                 //isTopdownBFS=false;
                 if(isTopdownBFS) // top-down BFS
                 {
-                    long teFwd = 0;
+                    int teFwd = 0;
 #pragma omp for
-                    for(long i=0; i<QFsize; i++)
+                    for(int i=0; i<QFsize; i++)
                     {
-                        long u = QF[i]; // fairness in Queue acess does not help... tested
-                        long curRoot = root[u]; // for unmatched U root[u] = u;
+                        int u = QF[i]; // fairness in Queue acess does not help... tested
+                        int curRoot = root[u]; // for unmatched U root[u] = u;
                         if( leaf[curRoot] == -1) // without this test this algorithm is still correct, but continues expanding a dead tree
                         {
-                            long j;
-                            //for(long j=vtx_pointer[u+1]-1; j>=vtx_pointer[u]; j--)
+                            int j;
+                            //for(int j=vtx_pointer[u+1]-1; j>=vtx_pointer[u]; j--)
                             for(j=vtx_pointer[u]; j<vtx_pointer[u+1]; j++)
                             {
-                                long v = endVertex[j]; // fairness in accessing adjacenty is not helping. why??: no matter how we access, every neighbor will be in the same tree (in serial case). Hence it does not change #iteration. In DFS this may discover shorter augmenting path, but in BFS it does not help.
+                                int v = endVertex[j]; // fairness in accessing adjacenty is not helping. why??: no matter how we access, every neighbor will be in the same tree (in serial case). Hence it does not change #iteration. In DFS this may discover shorter augmenting path, but in BFS it does not help.
                                 
                                 if(flag[v]==0) // avoids unnecessary __sync_fetch_and_or
                                 {
@@ -311,7 +311,7 @@ long* MS_BFS_Graft (graph* G, long* mateI)
                                         }
                                         else
                                         {
-                                            long next_u = mate[v];
+                                            int next_u = mate[v];
                                             root[next_u] = curRoot;
                                             
                                             if (kbuf < THREAD_BUF_LEN)
@@ -320,8 +320,8 @@ long* MS_BFS_Graft (graph* G, long* mateI)
                                             }
                                             else
                                             {
-                                                long voff = __sync_fetch_and_add (&QFnextSize, THREAD_BUF_LEN);
-                                                for (long vk = 0; vk < THREAD_BUF_LEN; ++vk)
+                                                int voff = __sync_fetch_and_add (&QFnextSize, THREAD_BUF_LEN);
+                                                for (int vk = 0; vk < THREAD_BUF_LEN; ++vk)
                                                     QFnext[voff + vk] = nbuf[vk];
                                                 nbuf[0] = next_u;
                                                 kbuf = 1;
@@ -339,17 +339,17 @@ long* MS_BFS_Graft (graph* G, long* mateI)
                 }
                 else // bottom up BFS
                 {
-                    long teRev=0;
+                    int teRev=0;
 #pragma omp for
-                    for(long v=nrows; v<NV; v++)
+                    for(int v=nrows; v<NV; v++)
                     {
                         if(flag[v]==0)
                         {
-                            long j;
+                            int j;
                             for(j=vtx_pointer[v+1]-1; j>=vtx_pointer[v]; j--)  // fairness here is important
                                 //for(j=vtx_pointer[v]; j<vtx_pointer[v+1]; j++)
                             {
-                                long u= endVertex[j];
+                                int u= endVertex[j];
                                 // u must be in the current layer or current layer+1, both cases are fine
                                 // if u in layer+1 we are taking a super step in graph traversal (meaning parent and children can be in Queue)
                                 if(root[u]!= -1 && leaf[root[u]] == -1) // u is in an active tree
@@ -366,7 +366,7 @@ long* MS_BFS_Graft (graph* G, long* mateI)
                                     }
                                     else
                                     {
-                                        long next_u = mate[v];
+                                        int next_u = mate[v];
                                         root[next_u] = root[v];
                                         
                                         if (kbuf < THREAD_BUF_LEN)
@@ -375,8 +375,8 @@ long* MS_BFS_Graft (graph* G, long* mateI)
                                         }
                                         else
                                         {
-                                            long voff = __sync_fetch_and_add (&QFnextSize, THREAD_BUF_LEN);
-                                            for (long vk = 0; vk < THREAD_BUF_LEN; ++vk)
+                                            int voff = __sync_fetch_and_add (&QFnextSize, THREAD_BUF_LEN);
+                                            for (int vk = 0; vk < THREAD_BUF_LEN; ++vk)
                                                 QFnext[voff + vk] = nbuf[vk];
                                             nbuf[0] = next_u;
                                             kbuf = 1;
@@ -396,14 +396,14 @@ long* MS_BFS_Graft (graph* G, long* mateI)
                 if(kbuf>0)
                 {
                     int64_t voff = __sync_fetch_and_add (&QFnextSize, kbuf);
-                    for (long vk = 0; vk < kbuf; ++vk)
+                    for (int vk = 0; vk < kbuf; ++vk)
                         QFnext[voff + vk] = nbuf[vk];
                 }
                 
 #pragma omp barrier
 #pragma omp single
                 {
-                    long* t;
+                    int* t;
                     t = QF;
                     QF = QFnext;
                     QFnext = t;
@@ -432,24 +432,24 @@ long* MS_BFS_Graft (graph* G, long* mateI)
         // ============================================================
         
         double timeAugment_start = omp_get_wtime();
-		long nextUnmatchedSize = 0;
+		int nextUnmatchedSize = 0;
 #pragma omp parallel
         {
-            long kbuf=0, nbuf[THREAD_BUF_LEN];
-            long taug_path_len = 0, taug_path_count = 0;
+            int kbuf=0, nbuf[THREAD_BUF_LEN];
+            int taug_path_len = 0, taug_path_count = 0;
 #pragma omp for
-            for(long i=0; i<numUnmatchedU; i++)
+            for(int i=0; i<numUnmatchedU; i++)
             {
-                long first_u = unmatchedU[i];
-                long last_v = leaf[first_u];
+                int first_u = unmatchedU[i];
+                int last_v = leaf[first_u];
                 if(last_v != -1)
                 {
-                    long v = last_v;
+                    int v = last_v;
                     taug_path_count++;
                     while(v != - 1)
                     {
-                        long u = parent[v];
-                        long next_v = mate[u];
+                        int u = parent[v];
+                        int next_v = mate[u];
                         mate[v] = u;
                         mate[u]=v;
                         v = next_v;
@@ -464,8 +464,8 @@ long* MS_BFS_Graft (graph* G, long* mateI)
                     }
                     else
                     {
-                        long voff = __sync_fetch_and_add (&nextUnmatchedSize, THREAD_BUF_LEN);
-                        for (long vk = 0; vk < THREAD_BUF_LEN; ++vk)
+                        int voff = __sync_fetch_and_add (&nextUnmatchedSize, THREAD_BUF_LEN);
+                        for (int vk = 0; vk < THREAD_BUF_LEN; ++vk)
                             nextUnmatchedU[voff + vk] = nbuf[vk];
                         nbuf[0] = first_u;
                         kbuf = 1;
@@ -475,8 +475,8 @@ long* MS_BFS_Graft (graph* G, long* mateI)
             }
             if(kbuf>0)
             {
-                long voff = __sync_fetch_and_add (&nextUnmatchedSize, kbuf);
-                for (long vk = 0; vk < kbuf; ++vk)
+                int voff = __sync_fetch_and_add (&nextUnmatchedSize, kbuf);
+                for (int vk = 0; vk < kbuf; ++vk)
                     nextUnmatchedU[voff + vk] = nbuf[vk];
             }
             __sync_fetch_and_add(&total_aug_path_len, taug_path_len);
@@ -487,10 +487,10 @@ long* MS_BFS_Graft (graph* G, long* mateI)
         
         matched = numUnmatchedU - nextUnmatchedSize; // number of new vertices matched in this phase
        
-        long* t = unmatchedU;
+        int* t = unmatchedU;
 		unmatchedU = nextUnmatchedU;
         nextUnmatchedU = t;
-        long tNumUnmatchedU = numUnmatchedU;
+        int tNumUnmatchedU = numUnmatchedU;
         numUnmatchedU = nextUnmatchedSize;
 		timeAugmentAll  += omp_get_wtime() - timeAugment_start ;
         
@@ -502,22 +502,22 @@ long* MS_BFS_Graft (graph* G, long* mateI)
         // ===========================================================================
         
         double timeStat_start = omp_get_wtime();
-        long ActiveVtx = 0, InactiveVtx=0, RenewableVtx = 0;
-        long step = 100; // smpling, computing statistics for every 100th vertices
+        int ActiveVtx = 0, InactiveVtx=0, RenewableVtx = 0;
+        int step = 100; // smpling, computing statistics for every 100th vertices
         
 #pragma omp parallel
         {
-            long tActiveVtx = 0, tInactiveVtx=0, tRenewableVtx = 0; //thread private variables
+            int tActiveVtx = 0, tInactiveVtx=0, tRenewableVtx = 0; //thread private variables
             
 #pragma omp for
-            for(long u=0; u<nrows; u+=step)
+            for(int u=0; u<nrows; u+=step)
             {
                 if(root[u]!=-1 && leaf[root[u]]==-1)
                     tActiveVtx++;
             }
             
 #pragma omp for
-            for(long v=nrows; v<NV; v+=step)
+            for(int v=nrows; v<NV; v+=step)
             {
                 if(root[v]==-1)
                     tInactiveVtx ++;
@@ -548,7 +548,7 @@ long* MS_BFS_Graft (graph* G, long* mateI)
         
         isGrafting = true;
         double timeGraft_start = omp_get_wtime(); // store the time to reconstruct frontiers
-        long eGraft = 0;
+        int eGraft = 0;
         
         if(isGrafting) // use dead-alive scheme
         {
@@ -557,11 +557,11 @@ long* MS_BFS_Graft (graph* G, long* mateI)
             QRsize = 0;
 #pragma omp parallel
             {
-                long teGraft = 0;
-                long nbuf[THREAD_BUF_LEN];
-                long kbuf = 0;
+                int teGraft = 0;
+                int nbuf[THREAD_BUF_LEN];
+                int kbuf = 0;
 #pragma omp for
-                for(long v = nrows; v < NV; v++)
+                for(int v = nrows; v < NV; v++)
                 {
                     //if( root[v]==-1 || leaf[root[v]]!=-1) // consider both dead and unvisited vertices, enble for testing
                     if( root[v]!=-1 && leaf[root[v]]!=-1) // we will not consider unvisited vertices because they can not be part of frontier
@@ -571,11 +571,11 @@ long* MS_BFS_Graft (graph* G, long* mateI)
                         root[v] = -1;
                         
                         // to obtain best result we look for parents in the adjacenty from high to low indices (given that in forward BFS we traverse adjacenty from low to high indices)
-                        long j;
+                        int j;
                         for(j=vtx_pointer[v+1]-1; j>=vtx_pointer[v]; j--)
                         //for(j=vtx_pointer[v]; j<vtx_pointer[v+1]; j++)
                         {
-                            long u = endVertex[j];
+                            int u = endVertex[j];
                             if(root[u]!= -1 && leaf[root[u]] == -1) // u in an active tree (no augmenting path found in the latest BFS)
                             {
                                 if(mate[v] == -1)
@@ -588,7 +588,7 @@ long* MS_BFS_Graft (graph* G, long* mateI)
                                     root[v] = root[u];
                                     parent[v] = u;
                                     flag[v] = 1;
-                                    long next_u = mate[v];
+                                    int next_u = mate[v];
                                     root[next_u] = root[v];
                                     //QF[__sync_fetch_and_add(&QFsize,1)] = next_u; // slow version, shared Queue
                                     if (kbuf < THREAD_BUF_LEN)
@@ -597,8 +597,8 @@ long* MS_BFS_Graft (graph* G, long* mateI)
                                     }
                                     else
                                     {
-                                        long voff = __sync_fetch_and_add (&QFsize, THREAD_BUF_LEN);
-                                        for (long vk = 0; vk < THREAD_BUF_LEN; ++vk)
+                                        int voff = __sync_fetch_and_add (&QFsize, THREAD_BUF_LEN);
+                                        for (int vk = 0; vk < THREAD_BUF_LEN; ++vk)
                                             QF[voff + vk] = nbuf[vk];
                                         nbuf[0] = next_u;
                                         kbuf = 1;
@@ -615,8 +615,8 @@ long* MS_BFS_Graft (graph* G, long* mateI)
                 
                 if(kbuf>0)
                 {
-                    long voff = __sync_fetch_and_add (&QFsize, kbuf);
-                    for (long vk = 0; vk < kbuf; ++vk)
+                    int voff = __sync_fetch_and_add (&QFsize, kbuf);
+                    for (int vk = 0; vk < kbuf; ++vk)
                         QF[voff + vk] = nbuf[vk];
                 }
                 __sync_fetch_and_add(&eGraft, teGraft);
@@ -629,7 +629,7 @@ long* MS_BFS_Graft (graph* G, long* mateI)
         else // constructs active trees from scratch
         {
 #pragma omp parallel for schedule(static) default(shared)
-            for(long v = nrows; v < NV; v++)
+            for(int v = nrows; v < NV; v++)
             {
                 if( root[v]!=-1)
                 {
@@ -641,7 +641,7 @@ long* MS_BFS_Graft (graph* G, long* mateI)
             
             
 #pragma omp parallel for schedule(static) default(shared)
-            for(long v = 0; v < nrows; v++)
+            for(int v = 0; v < nrows; v++)
             {
                 if( root[v]!=-1 && leaf[root[v]]==-1)
                 {
@@ -654,9 +654,9 @@ long* MS_BFS_Graft (graph* G, long* mateI)
             
             QFsize = numUnmatchedU;
 #pragma omp parallel for default(shared)
-            for(long i=0; i<QFsize; i++)
+            for(int i=0; i<QFsize; i++)
             {
-                long u = unmatchedU[i];
+                int u = unmatchedU[i];
                 QF[i] = u;
                 root[u] = u;
             }
@@ -676,8 +676,8 @@ long* MS_BFS_Graft (graph* G, long* mateI)
         timeGraftAll += timeGraft;
         
 
-        long count = 0;
-        for(long i=0; i<G->nrows; i++)
+        int count = 0;
+        for(int i=0; i<G->nrows; i++)
         {
             if(mate[i]==-1) count ++;
         }
@@ -701,17 +701,17 @@ long* MS_BFS_Graft (graph* G, long* mateI)
 
     // numUnmatchedU contains only non-isolated unmatched vertices
     // compute actual matching cardinality
-    long matched_rows = 0;
+    int matched_rows = 0;
 #pragma omp parallel
     {
-        long tmatched = 0; //thread private variables
+        int tmatched = 0; //thread private variables
 #pragma omp for
-        for(long u=0; u<nrows; u++)
+        for(int u=0; u<nrows; u++)
             if(mate[u]!=-1) tmatched++;
         __sync_fetch_and_add(&matched_rows,tmatched);
     }
     
-    long isolated_rows = nrows - matched_rows - numUnmatchedU;
+    int isolated_rows = nrows - matched_rows - numUnmatchedU;
     
     printf("============================================================================\n\n");
     printf("========= Overall Statistics ===============\n");
@@ -743,7 +743,7 @@ long* MS_BFS_Graft (graph* G, long* mateI)
     
     
 
-    //for(long i=0; i<NV; i++)
+    //for(int i=0; i<NV; i++)
     //{
     //    mateI[i] = mate[i];
     //}

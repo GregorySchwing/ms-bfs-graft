@@ -20,7 +20,7 @@ using namespace std;
 
 
 // ---------- maximum matching routines -------------------
-long* Pothen_Fan_Fairnes(graph* G, long* mateI);
+int* Pothen_Fan_Fairnes(graph* G, int* mateI);
 
 
 
@@ -33,7 +33,7 @@ int main(int argc, char** argv)
 	}
 	
 	
-	long numThreads = atoi(argv[2]);
+	int numThreads = atoi(argv[2]);
     omp_set_num_threads(numThreads);
 	char inFile[200];
 	strcpy(inFile,argv[1]); 
@@ -44,15 +44,15 @@ int main(int argc, char** argv)
     
     
     
-    long isolated_rows = 0, isolated_cols = 0;
+    int isolated_rows = 0, isolated_cols = 0;
 #pragma omp parallel
     {
-        long tisor = 0, tisoc = 0; //thread private variables
+        int tisor = 0, tisoc = 0; //thread private variables
 #pragma omp for
-        for(long u=0; u<g->nrows; u++)
+        for(int u=0; u<g->nrows; u++)
         if(g->vtx_pointer[u+1] == g->vtx_pointer[u]) tisor++;
 #pragma omp for
-        for(long u=g->nrows; u<g->n; u++)
+        for(int u=g->nrows; u<g->n; u++)
         if(g->vtx_pointer[u+1] == g->vtx_pointer[u]) tisoc++;
         
         __sync_fetch_and_add(&isolated_rows,tisor);
@@ -74,22 +74,22 @@ int main(int argc, char** argv)
 
 	
 	
-	long NV = g-> n;
-	long nrows = g-> nrows;
-	long* unmatchedU = (long*) malloc(NV * sizeof(long));
-	long* mateI = (long*) malloc(NV * sizeof(long));
-	for(long u=0; u<NV; u++)
+	int NV = g-> n;
+	int nrows = g-> nrows;
+	int* unmatchedU = (int*) malloc(NV * sizeof(int));
+	int* mateI = (int*) malloc(NV * sizeof(int));
+	for(int u=0; u<NV; u++)
 	{
 		mateI[u] = -1;
 	}
-	long numUnmatchedU;
+	int numUnmatchedU;
 	numUnmatchedU = KarpSipserInitS(g, unmatchedU,  mateI);
-    //long* mate = Pothen_Fan_Fairnes(g, mateI);
+    //int* mate = Pothen_Fan_Fairnes(g, mateI);
     //free(mate);
 	
     
     int threads[]={1,2,4,8,15,30,60,120,240};
-    long* mate;
+    int* mate;
     for(int i=0; i<9; i++)
     {
         omp_set_num_threads(threads[i]);
@@ -108,23 +108,23 @@ int main(int argc, char** argv)
 
 // DFS with lookahead that finds a single augmenting path 
 // called from pothen-fan
-long findAugPathLookahead(long sFirst, long* flagLookahead, long* flagDFS, long* mate, graph* G,long* path,long* edgeIndexLookahead, long* edgeIndex, long* edgeVisited)
+int findAugPathLookahead(int sFirst, int* flagLookahead, int* flagDFS, int* mate, graph* G,int* path,int* edgeIndexLookahead, int* edgeIndex, int* edgeVisited)
 {
 	
-	long *edgeStart = G->vtx_pointer;
-	long *endVertex = G->endV;
-	long NE = G->m;
-	long top = -1;
+	int *edgeStart = G->vtx_pointer;
+	int *endVertex = G->endV;
+	int NE = G->m;
+	int top = -1;
 	path[++top] = sFirst; // push , path is equivalent to stack
 	
 	while (top >= 0 )// while stack not empty
 	{
-		long u = path[top];
-		long uDegree = edgeStart[u+1] - edgeStart[u];
+		int u = path[top];
+		int uDegree = edgeStart[u+1] - edgeStart[u];
 		// lookahed part
 		while(++edgeIndexLookahead[u] < uDegree)
 		{
-			long v = endVertex[edgeStart[u]+ edgeIndexLookahead[u]];
+			int v = endVertex[edgeStart[u]+ edgeIndexLookahead[u]];
 			(*edgeVisited) ++;  // just for stat
 			if(__sync_fetch_and_add(&flagLookahead[v],1) == 0)
 			{
@@ -142,7 +142,7 @@ long findAugPathLookahead(long sFirst, long* flagLookahead, long* flagDFS, long*
 		while(++edgeIndex[u] < uDegree)
 		{
 			
-			long v = endVertex[edgeStart[u]+ edgeIndex[u]];
+			int v = endVertex[edgeStart[u]+ edgeIndex[u]];
 			(*edgeVisited) ++;
 			if(__sync_fetch_and_add(&flagDFS[v],1) == 0)
 			{
@@ -171,23 +171,23 @@ long findAugPathLookahead(long sFirst, long* flagLookahead, long* flagDFS, long*
 
 // DFS with lookahead that finds a single augmenting path 
 // called from pothen-fan
-long findAugPathLookaheadReverse(long sFirst, long* flagLookahead, long* flagDFS, long* mate, graph* G,long* path,long* edgeIndexLookahead, long* edgeIndex, long* edgeVisited)
+int findAugPathLookaheadReverse(int sFirst, int* flagLookahead, int* flagDFS, int* mate, graph* G,int* path,int* edgeIndexLookahead, int* edgeIndex, int* edgeVisited)
 {
 	
-	long *edgeStart = G->vtx_pointer;
-	long *endVertex = G->endV;
-	long NE = G->m;
-	long top = -1;
+	int *edgeStart = G->vtx_pointer;
+	int *endVertex = G->endV;
+	int NE = G->m;
+	int top = -1;
 	path[++top] = sFirst; // push , path is equivalent to stack 
 	
 	while (top >= 0 )// while stack not empty 
 	{
-		long u = path[top];
-		long uDegree = edgeStart[u+1] - edgeStart[u];
+		int u = path[top];
+		int uDegree = edgeStart[u+1] - edgeStart[u];
 		// lookahed part
 		while(++edgeIndexLookahead[u] < uDegree)
 		{
-			long v = endVertex[edgeStart[u]+ edgeIndexLookahead[u]];
+			int v = endVertex[edgeStart[u]+ edgeIndexLookahead[u]];
 			(*edgeVisited) ++;  // just for stat
 			if(__sync_fetch_and_add(&flagLookahead[v],1) == 0)
 			{
@@ -206,7 +206,7 @@ long findAugPathLookaheadReverse(long sFirst, long* flagLookahead, long* flagDFS
 		while(--edgeIndex[u] >= 0)
 		{
 			
-			long v = endVertex[edgeStart[u]+ edgeIndex[u]];
+			int v = endVertex[edgeStart[u]+ edgeIndex[u]];
 			(*edgeVisited) ++;
 			if(__sync_fetch_and_add(&flagDFS[v],1) == 0) 
 			{
@@ -233,37 +233,37 @@ long findAugPathLookaheadReverse(long sFirst, long* flagLookahead, long* flagDFS
 
 // ------------- PF with Fairness ---------------------
 
-long* Pothen_Fan_Fairnes(graph* G, long* mateI)
+int* Pothen_Fan_Fairnes(graph* G, int* mateI)
 {
 	
 	double time2,time;
 	//time = omp_get_wtime();
-	long NE = G->m;
-	long NV = G->n;
-	long *endVertex = G->endV;
-	long *edgeStart = G->vtx_pointer;
+	int NE = G->m;
+	int NV = G->n;
+	int *endVertex = G->endV;
+	int *edgeStart = G->vtx_pointer;
 	
 	
-	long* unmatchedU = (long*) malloc(NV * sizeof(long));
-	long* tQ = (long*) malloc(NV * sizeof(long));
-	long* mate = (long*) malloc(NV * sizeof(long));
-	long* flagDFS = (long*) malloc(NV * sizeof(long));
-	long* flagLookahead = (long*) malloc(NV * sizeof(long));
-	long* edgeIndex = (long*) malloc(NV * sizeof(long));
-	long* edgeIndexLookahead = (long*) malloc(NV * sizeof(long));
+	int* unmatchedU = (int*) malloc(NV * sizeof(int));
+	int* tQ = (int*) malloc(NV * sizeof(int));
+	int* mate = (int*) malloc(NV * sizeof(int));
+	int* flagDFS = (int*) malloc(NV * sizeof(int));
+	int* flagLookahead = (int*) malloc(NV * sizeof(int));
+	int* edgeIndex = (int*) malloc(NV * sizeof(int));
+	int* edgeIndexLookahead = (int*) malloc(NV * sizeof(int));
 	time = omp_get_wtime();
     vector<vector< double> > fullStat;
 	
     
 #define THREAD_BUF_LEN 16384
-    long numUnmatchedU = 0;
+    int numUnmatchedU = 0;
     
     // identify unmatched and non-isolated vertices from where search will begin
 #pragma omp parallel
     {
-        long kbuf=0, nbuf[THREAD_BUF_LEN];
+        int kbuf=0, nbuf[THREAD_BUF_LEN];
 #pragma omp for
-        for(long u=0; u<G->nrows; u++)
+        for(int u=0; u<G->nrows; u++)
         {
             if(mateI[u] == -1 && (edgeStart[u+1] > edgeStart[u]))
             {
@@ -273,8 +273,8 @@ long* Pothen_Fan_Fairnes(graph* G, long* mateI)
                 }
                 else
                 {
-                    long voff = __sync_fetch_and_add (&numUnmatchedU, THREAD_BUF_LEN);
-                    for (long vk = 0; vk < THREAD_BUF_LEN; ++vk)
+                    int voff = __sync_fetch_and_add (&numUnmatchedU, THREAD_BUF_LEN);
+                    for (int vk = 0; vk < THREAD_BUF_LEN; ++vk)
                     unmatchedU[voff + vk] = nbuf[vk];
                     nbuf[0] = u;
                     kbuf = 1;
@@ -283,15 +283,15 @@ long* Pothen_Fan_Fairnes(graph* G, long* mateI)
         }
         if(kbuf>0)
         {
-            long voff = __sync_fetch_and_add (&numUnmatchedU, kbuf);
-            for (long vk = 0; vk < kbuf; ++vk)
+            int voff = __sync_fetch_and_add (&numUnmatchedU, kbuf);
+            for (int vk = 0; vk < kbuf; ++vk)
             unmatchedU[voff + vk] = nbuf[vk];
         }
     }
     
     
 #pragma omp parallel for default(shared)
-	for(long i=0; i<NV; i++)
+	for(int i=0; i<NV; i++)
 	{
 		mate[i] = mateI[i];
 		flagLookahead[i] = 0;
@@ -299,20 +299,20 @@ long* Pothen_Fan_Fairnes(graph* G, long* mateI)
 	}
 	
 	
-	long nthreads;
+	int nthreads;
 #pragma omp parallel
 	{
 		nthreads = omp_get_num_threads();
 	}
-	long** augPaths = (long**) malloc(sizeof(long*) * nthreads);
-	for(long i=0; i<nthreads; i++)
+	int** augPaths = (int**) malloc(sizeof(int*) * nthreads);
+	for(int i=0; i<nthreads; i++)
 	{
-		augPaths[i] = (long*) malloc(NV * sizeof(long));
+		augPaths[i] = (int*) malloc(NV * sizeof(int));
 	}
 	
 	
-	long iterations = 0;
-	long numEdgeVisited = 0;
+	int iterations = 0;
+	int numEdgeVisited = 0;
 	
     printf("\n************* Starting Pothen-Fan Algorithm  *************\n");
     printf("Initial number of non-isolated row vertices = %ld\n\n", numUnmatchedU);
@@ -326,11 +326,11 @@ long* Pothen_Fan_Fairnes(graph* G, long* mateI)
 	{
 		iterations++;
 		time2 = omp_get_wtime();
-		long tQ_len = 0;
+		int tQ_len = 0;
 		if(iterations % 2 == 1) // odd iterations
 		{
 #pragma omp parallel for schedule(static)
-			for(long i=0; i< NV; i++)
+			for(int i=0; i< NV; i++)
 			{
 				flagDFS[i] = 0;
 				edgeIndex[i] = -1;
@@ -339,26 +339,26 @@ long* Pothen_Fan_Fairnes(graph* G, long* mateI)
 		else
 		{
 #pragma omp parallel for schedule(static)
-			for(long i=0; i< NV; i++)
+			for(int i=0; i< NV; i++)
 			{
 				flagDFS[i] = 0;
 				edgeIndex[i] = edgeStart[i+1] - edgeStart[i];
 			}
 		}
-		long maxAugPathLen = -1;
-		long phaseEdgeVisited = 0;
+		int maxAugPathLen = -1;
+		int phaseEdgeVisited = 0;
 #pragma omp parallel for schedule(dynamic) default(shared)
-		for(long i=0; i < numUnmatchedU; i++)
+		for(int i=0; i < numUnmatchedU; i++)
 		{
 			
 #ifdef FULL_STAT
 			double timeTree = omp_get_wtime();
 #endif
-			long tid = omp_get_thread_num();
-			long* augPath = augPaths[tid];
-			long edgeVisited = 0;
-			long uFirst = unmatchedU[i];
-			long augPathLen;
+			int tid = omp_get_thread_num();
+			int* augPath = augPaths[tid];
+			int edgeVisited = 0;
+			int uFirst = unmatchedU[i];
+			int augPathLen;
 			if(iterations % 2 == 1) // odd iterations
 				augPathLen = findAugPathLookahead(uFirst,flagLookahead, flagDFS,mate,G,augPath,edgeIndexLookahead,edgeIndex, &edgeVisited) ;
 			else
@@ -366,8 +366,8 @@ long* Pothen_Fan_Fairnes(graph* G, long* mateI)
 			if (augPathLen > 0)
 			{
 				// augment in serial ... can be done in parallel also ...
-				long u = unmatchedU[i];
-				for(long k=0; k< augPathLen; k+=2)
+				int u = unmatchedU[i];
+				for(int k=0; k< augPathLen; k+=2)
 				{
 					mate[augPath[k]] = augPath[k+1];
 					mate[augPath[k+1]] = augPath[k];
@@ -402,7 +402,7 @@ long* Pothen_Fan_Fairnes(graph* G, long* mateI)
             numUnmatchedU  = 0; // every non-isolated rows are matched, just for correct stats
             break;
         }
-		long* tt = tQ;
+		int* tt = tQ;
 		tQ =  unmatchedU;
 		unmatchedU = tt;
 		
@@ -415,17 +415,17 @@ long* Pothen_Fan_Fairnes(graph* G, long* mateI)
    
     // numUnmatchedU contains only non-isolated unmatched vertices
     // compute actual matching cardinality
-    long matched_rows = 0;
+    int matched_rows = 0;
 #pragma omp parallel
     {
-        long tmatched = 0; //thread private variables
+        int tmatched = 0; //thread private variables
 #pragma omp for
-        for(long u=0; u<G->nrows; u++)
+        for(int u=0; u<G->nrows; u++)
         if(mate[u]!=-1) tmatched++;
         __sync_fetch_and_add(&matched_rows,tmatched);
     }
     
-    long isolated_rows = G->nrows - matched_rows - numUnmatchedU;
+    int isolated_rows = G->nrows - matched_rows - numUnmatchedU;
     
     printf("============================================================================\n\n");
     printf("========= Overall Statistics ===============\n");
@@ -442,9 +442,9 @@ long* Pothen_Fan_Fairnes(graph* G, long* mateI)
 
 #ifdef FULL_STAT
     FILE* fp1 = fopen("fullStat.txt","w");
-    for (long i=0; i<fullStat.size(); i++)
+    for (int i=0; i<fullStat.size(); i++)
     {
-        fprintf(fp1,"%8ld %8ld %15ld %15ld    %6.4lf\n", (long)fullStat[i][0], (long)fullStat[i][1], (long)fullStat[i][2], (long)fullStat[i][3], fullStat[i][4]);
+        fprintf(fp1,"%8ld %8ld %15ld %15ld    %6.4lf\n", (int)fullStat[i][0], (int)fullStat[i][1], (int)fullStat[i][2], (int)fullStat[i][3], fullStat[i][4]);
     }
     fclose(fp1);
 #endif
@@ -456,7 +456,7 @@ long* Pothen_Fan_Fairnes(graph* G, long* mateI)
 	free(flagLookahead);
 	free(edgeIndexLookahead);
 	free(tQ);
-	for(long i=0; i<nthreads; i++)
+	for(int i=0; i<nthreads; i++)
 	{
 		free(augPaths[i]);
 	}

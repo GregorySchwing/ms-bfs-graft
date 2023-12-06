@@ -3,6 +3,6 @@
  */
 #include "graphgenBP.h"
 
-long KarpSipserInit(graph* G, long* unmatchedU,  long* mate);
-long KarpSipserInitS(graph* G, long* unmatchedU,  long* mate);
+int KarpSipserInit(graph* G, int* unmatchedU,  int* mate);
+int KarpSipserInitS(graph* G, int* unmatchedU,  int* mate);
 

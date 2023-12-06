@@ -81,7 +81,7 @@ int mm_is_valid(MM_typecode matcode);		/* too complex for a macro */
 #define MM_NOT_MTX				13
 #define MM_NO_HEADER			14
 #define MM_UNSUPPORTED_TYPE		15
-#define MM_LINE_TOO_LONG		16
+#define MM_LINE_TOO_int		16
 #define MM_COULD_NOT_WRITE_FILE	17
 
 

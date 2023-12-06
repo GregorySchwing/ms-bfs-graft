@@ -27,28 +27,28 @@ void free_graph( graph* bGraph)
 
 graph* swap_side(graph* bGraph)
 {
-    long* tvtx_pointer = new long[bGraph->n+1];
+    int* tvtx_pointer = new int[bGraph->n+1];
     double* tweight = new double[bGraph->m];
-    long* tendV = new long[bGraph->m];
+    int* tendV = new int[bGraph->m];
     bGraph->vtx_pointer[0]=0;
     
-    long last_rp = bGraph->vtx_pointer[bGraph->nrows];
-    for(long i=0, j=last_rp; i<last_rp; i++, j++)
+    int last_rp = bGraph->vtx_pointer[bGraph->nrows];
+    for(int i=0, j=last_rp; i<last_rp; i++, j++)
     {
         tendV[j] = bGraph->endV[i] - bGraph->nrows;
         tweight[j] = bGraph->weight[i];
     }
-    for(long i=0, j=last_rp; i<last_rp; i++, j++)
+    for(int i=0, j=last_rp; i<last_rp; i++, j++)
     {
         tendV[i] = bGraph->endV[j] + bGraph->nrows;
         tweight[j] = bGraph->weight[i];
     }
     
-    for(long i=0, j=bGraph->nrows; i<=bGraph->nrows; i++, j++)
+    for(int i=0, j=bGraph->nrows; i<=bGraph->nrows; i++, j++)
     {
         tvtx_pointer[j] = bGraph->vtx_pointer[i] + last_rp;
     }
-    for(long i=0, j=bGraph->nrows; i<bGraph->nrows; i++, j++)
+    for(int i=0, j=bGraph->nrows; i<bGraph->nrows; i++, j++)
     {
         tvtx_pointer[i] = bGraph->vtx_pointer[j] - last_rp;
     }
@@ -81,7 +81,7 @@ bool isEqual(graph* bGraph1, graph* bGraph2)
         return false;
     }
     
-    for(long i=0; i<=bGraph1->n ;i++)
+    for(int i=0; i<=bGraph1->n ;i++)
     {
         if(bGraph1->vtx_pointer[i] != bGraph2->vtx_pointer[i])
         {
@@ -90,7 +90,7 @@ bool isEqual(graph* bGraph1, graph* bGraph2)
         }
     }
     
-    for(long i=0; i<bGraph1->m ;i++)
+    for(int i=0; i<bGraph1->m ;i++)
     {
         if(bGraph1->endV[i] != bGraph2->endV[i])
         {
@@ -163,10 +163,10 @@ T* prefixsum(T* in, int size, int nthreads)
 
 void fast_mtx_read_build(char *fname, graph* bGraph)
 {
-    vector<long> allrows;
-    vector<long> allcols;
+    vector<int> allrows;
+    vector<int> allcols;
     vector<double> allvals;
-    long nrows, ncols;
+    int nrows, ncols;
     bool isWeighted;
     
     double time_start = omp_get_wtime();
@@ -180,27 +180,27 @@ void fast_mtx_read_build(char *fname, graph* bGraph)
     bGraph->n = nrows + ncols;
     bGraph->nrows = nrows;
     // This will be allocated in the prefixsum function
-    //bGraph->vtx_pointer = new long[bGraph->n+1];
+    //bGraph->vtx_pointer = new int[bGraph->n+1];
     bGraph->weight = new double[bGraph->m];
-    bGraph->endV = new long[bGraph->m];
+    bGraph->endV = new int[bGraph->m];
     //bGraph->vtx_pointer[0]=0;
-    long* degrees = new long[bGraph->n];
+    int* degrees = new int[bGraph->n];
     
     
 #pragma omp parallel for
-    for(long i =0; i<bGraph->n; i++)
+    for(int i =0; i<bGraph->n; i++)
     {
         degrees[i] = 0;
     }
 
 #pragma omp parallel for
-    for(long i =0; i< allrows.size(); i++)
+    for(int i =0; i< allrows.size(); i++)
     {
         __sync_fetch_and_add(degrees + allrows[i],1);
         __sync_fetch_and_add(degrees + nrows + allcols[i],1);
     }
     
-    long nthreads=1;
+    int nthreads=1;
 #pragma omp parallel
     {
         nthreads = omp_get_num_threads();
@@ -208,19 +208,19 @@ void fast_mtx_read_build(char *fname, graph* bGraph)
     
     bGraph->vtx_pointer = prefixsum(degrees, bGraph->n, nthreads);
     
-    long* cur_vtx_pointer = degrees; // just reuse the same memory
+    int* cur_vtx_pointer = degrees; // just reuse the same memory
 #pragma omp parallel for
-    for(long i =0; i<bGraph->n; i++)
+    for(int i =0; i<bGraph->n; i++)
     {
         cur_vtx_pointer[i] = bGraph->vtx_pointer[i];
     }
     
     
 #pragma omp parallel for
-    for(long i =0; i<allrows.size(); i++)
+    for(int i =0; i<allrows.size(); i++)
     {
-        long rowIdx = __sync_fetch_and_add(cur_vtx_pointer + allrows[i],1);
-        long colIdx = __sync_fetch_and_add(cur_vtx_pointer + nrows + allcols[i],1);
+        int rowIdx = __sync_fetch_and_add(cur_vtx_pointer + allrows[i],1);
+        int colIdx = __sync_fetch_and_add(cur_vtx_pointer + nrows + allcols[i],1);
         //if(rowIdx < bGraph->vtx_pointer[allrows[i]+1] && colIdx < bGraph->vtx_pointer[allcols[i]+nrows+1])
         {
             bGraph->endV[rowIdx] = nrows + allcols[i];
@@ -250,9 +250,9 @@ void process_mtx_compressed(char *fname, graph* bGraph, int **rows, int **cols, 
 
     double time_start = omp_get_wtime();
 
-	long count=0,i,j;
-	long inp, m, sym, edgecnt_;
-	long numRow, numCol, nonZeros;
+	int count=0,i,j;
+	int inp, m, sym, edgecnt_;
+	int numRow, numCol, nonZeros;
 	double f;
 	string s;
 	ifstream inf;
@@ -285,11 +285,11 @@ void process_mtx_compressed(char *fname, graph* bGraph, int **rows, int **cols, 
 		
 		count=inp;
 		
-		vector<vector<long> > graphCRSIdx(numRow);
+		vector<vector<int> > graphCRSIdx(numRow);
 		vector<vector<double> > graphCRSVal(numRow);
-		vector<vector<long> > graphCCSIdx(numCol);
+		vector<vector<int> > graphCCSIdx(numCol);
 		vector<vector<double> > graphCCSVal(numCol);
-		long diag=0;
+		int diag=0;
 		while(count>0)
 		{
 			inf>>i;
@@ -331,9 +331,9 @@ void process_mtx_compressed(char *fname, graph* bGraph, int **rows, int **cols, 
 			bGraph->m = nonZeros*2 - diag;
 		bGraph->m *= 2; // store both edges for undirected graph
 		bGraph->n = numRow + numCol;
-		bGraph->vtx_pointer = new long[bGraph->n+1];
+		bGraph->vtx_pointer = new int[bGraph->n+1];
 		bGraph->weight = new double[bGraph->m];
-		bGraph->endV = new long[bGraph->m];
+		bGraph->endV = new int[bGraph->m];
 		bGraph->vtx_pointer[0]=0;
 		// always place the side with smaller number of virtices in the first part
 		if (numRow <= numCol)
@@ -360,8 +360,8 @@ void process_mtx_compressed(char *fname, graph* bGraph, int **rows, int **cols, 
 			bGraph->nrows = numCol;
 			for(i=0;i<numCol;i++)
 			{
-				long edges = graphCCSIdx[i].size();
-				for (long k=0; k<edges ; k++)
+				int edges = graphCCSIdx[i].size();
+				for (int k=0; k<edges ; k++)
 				{
 					bGraph->endV[bGraph->vtx_pointer[i] + k] = graphCCSIdx[i][k] + numCol;
 					if(m==3)
@@ -373,8 +373,8 @@ void process_mtx_compressed(char *fname, graph* bGraph, int **rows, int **cols, 
 			
 			for(j=0;j<numRow;j++,i++)
 			{
-				long edges = graphCRSIdx[j].size();
-				for (long k=0; k<edges ; k++)
+				int edges = graphCRSIdx[j].size();
+				for (int k=0; k<edges ; k++)
 				{
 					bGraph->endV[bGraph->vtx_pointer[i] + k] = graphCRSIdx[j][k] - numRow;
 					if(m==3)
@@ -404,9 +404,9 @@ void process_mtx_compressed(char *fname, graph* bGraph)
 
     double time_start = omp_get_wtime();
 
-	long count=0,i,j;
-	long inp, m, sym, edgecnt_;
-	long numRow, numCol, nonZeros;
+	int count=0,i,j;
+	int inp, m, sym, edgecnt_;
+	int numRow, numCol, nonZeros;
 	double f;
 	string s;
 	ifstream inf;
@@ -439,11 +439,11 @@ void process_mtx_compressed(char *fname, graph* bGraph)
 		
 		count=inp;
 		
-		vector<vector<long> > graphCRSIdx(numRow);
+		vector<vector<int> > graphCRSIdx(numRow);
 		vector<vector<double> > graphCRSVal(numRow);
-		vector<vector<long> > graphCCSIdx(numCol);
+		vector<vector<int> > graphCCSIdx(numCol);
 		vector<vector<double> > graphCCSVal(numCol);
-		long diag=0;
+		int diag=0;
 		while(count>0)
 		{
 			inf>>i;
@@ -485,9 +485,9 @@ void process_mtx_compressed(char *fname, graph* bGraph)
 			bGraph->m = nonZeros*2 - diag;
 		bGraph->m *= 2; // store both edges for undirected graph
 		bGraph->n = numRow + numCol;
-		bGraph->vtx_pointer = new long[bGraph->n+1];
+		bGraph->vtx_pointer = new int[bGraph->n+1];
 		bGraph->weight = new double[bGraph->m];
-		bGraph->endV = new long[bGraph->m];
+		bGraph->endV = new int[bGraph->m];
 		bGraph->vtx_pointer[0]=0;
 		// always place the side with smaller number of virtices in the first part
 		if (numRow <= numCol)
@@ -514,8 +514,8 @@ void process_mtx_compressed(char *fname, graph* bGraph)
 			bGraph->nrows = numCol;
 			for(i=0;i<numCol;i++)
 			{
-				long edges = graphCCSIdx[i].size();
-				for (long k=0; k<edges ; k++)
+				int edges = graphCCSIdx[i].size();
+				for (int k=0; k<edges ; k++)
 				{
 					bGraph->endV[bGraph->vtx_pointer[i] + k] = graphCCSIdx[i][k] + numCol;
 					if(m==3)
@@ -527,8 +527,8 @@ void process_mtx_compressed(char *fname, graph* bGraph)
 			
 			for(j=0;j<numRow;j++,i++)
 			{
-				long edges = graphCRSIdx[j].size();
-				for (long k=0; k<edges ; k++)
+				int edges = graphCRSIdx[j].size();
+				for (int k=0; k<edges ; k++)
 				{
 					bGraph->endV[bGraph->vtx_pointer[i] + k] = graphCRSIdx[j][k] - numRow;
 					if(m==3)

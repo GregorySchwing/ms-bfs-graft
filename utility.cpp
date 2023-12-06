@@ -12,12 +12,12 @@
 
 // check the mate array and return maching size
 // nrows  - number of u vertices (row vertice )
-long checkMatching(long nrows,long* mate)
+int checkMatching(int nrows,int* mate)
 {
-    long count = 0;
-    long umSize = 0;
+    int count = 0;
+    int umSize = 0;
 #pragma omp parallel for default(shared)
-    for(long i=0; i<nrows; i++)
+    for(int i=0; i<nrows; i++)
     {
         if(mate[i]!=-1)
         {
