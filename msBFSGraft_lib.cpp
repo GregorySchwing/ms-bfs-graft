@@ -31,16 +31,19 @@ using namespace std;
 int* MS_BFS_Graft(graph* G, int* mateI);
 
 extern "C"
-int main_lib_msbfsgraft(int argc, char *argv[], int **rows, int **cols, int **matching, int*nr_ptr, int*nc_ptr, int*nn_ptr, int parallelKS)
+int main_lib_msbfsgraft(int argc, char *argv[], int **rows, int **cols, int **matching, int*nr_ptr, int*nc_ptr, int*nn_ptr)
 
 {
-	if(argc != 3)
+	if(argc != 5)
 	{
-		printf("Usage: ./msBFSGraft fileName numThreads\n");
+		printf("Usage: ./msBFSGraft fileName numThreads parallelKS just_read_file\n");
 		return -1;
 	}
     
 	int numThreads = atoi(argv[2]);
+    int parallelKS = atoi(argv[3]);
+    int just_read_file = atoi(argv[4]);
+
     omp_set_num_threads(numThreads);
 #pragma omp parallel
     {
@@ -67,7 +70,10 @@ int main_lib_msbfsgraft(int argc, char *argv[], int **rows, int **cols, int **ma
     //fast_mtx_read_build(inFile,g);  // ABAB: to replace process_mtx_compressed
     //graph* g =  swap_side(tg);
     //isEqual(g,g1);
-    
+    if (just_read_file){
+        free(g);
+        return 0;
+    }
     
     int isolated_rows = 0, isolated_cols = 0;
 #pragma omp parallel
