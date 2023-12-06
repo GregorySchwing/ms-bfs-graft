@@ -88,7 +88,7 @@ void check_newline(int *bytes_read, int bytes_requested, char *buf)
 }
 
 // updates to curpos are reflected in the caller function
-bool FetchBatch(FILE * f_local, int int & curpos, int int end_fpos, bool firstcall, vector<string> & lines, int threadid)
+bool FetchBatch(FILE * f_local, long int & curpos, long int end_fpos, bool firstcall, vector<string> & lines, int threadid)
 {
     size_t bytes2fetch = BATCH;    // we might read more than needed but no problem as we won't process them
     char * buf = new char[bytes2fetch];
@@ -229,14 +229,14 @@ void ThreadedMMReader(const string & filename, vector<IT> & allrows, vector<IT> 
     }
     int64_t file_size = st.st_size;
     cout << "File is " << file_size << " bytes" << endl;
-    int int ffirst = ftell(f);
+    long int ffirst = ftell(f);
     fclose(f);
     
     vector<IT> localsizes(omp_get_max_threads());
     
 #pragma omp parallel
     {
-        int int fpos, end_fpos;
+        long int fpos, end_fpos;
         int this_thread = omp_get_thread_num();
         int num_threads = omp_get_num_threads();
             
