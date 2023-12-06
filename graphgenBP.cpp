@@ -330,9 +330,10 @@ void process_mtx_compressed(char *fname, graph* bGraph, int **rows, int **cols, 
 		if(sym == 1) //symmetric matrix
 			bGraph->m = nonZeros*2 - diag;
 		bGraph->m *= 2; // store both edges for undirected graph
-        *nn_ptr = bGraph->m/2;
+        //*nn_ptr = bGraph->m/2;
+        *nn_ptr = bGraph->m/4;
         *nr_ptr= numRow;
-        *nc_ptr= numRow;
+        *nc_ptr= numCol;
 		bGraph->n = numRow + numCol;
 		*rows = new int[bGraph->n+1];
 		bGraph->vtx_pointer = *rows;
