@@ -109,11 +109,15 @@ int main_lib_msbfsgraft(int argc, char *argv[], int **rows, int **cols, int **ma
 	}
 	int numUnmatchedU;
 
-	numUnmatchedU = KarpSipserInitS(g, unmatchedU,  mateI); //serial version
-    //numUnmatchedU = KarpSipserInit(g, unmatchedU,  mate); //parallel version
+    if (parallelKS){
+	    numUnmatchedU = KarpSipserInit(g, unmatchedU,  mateI); //parallel version
+
+    } else {
+        numUnmatchedU = KarpSipserInitS(g, unmatchedU,  mateI); //serial version
+    }
     
-    int* mate = MS_BFS_Graft(g, mateI); // result is stored in mate array
-    
+    //int* mate = MS_BFS_Graft(g, mateI); // result is stored in mate array
+    *matching = MS_BFS_Graft(g, mateI); // result is stored in mate array
     // for scaling study
     /*
     int threads[]={1,2,4,8,15,30,60,120,240};
