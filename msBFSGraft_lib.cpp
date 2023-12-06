@@ -31,18 +31,17 @@ using namespace std;
 int* MS_BFS_Graft(graph* G, int* mateI);
 
 extern "C"
-int main_lib_msbfsgraft(int argc, char *argv[], int **rows, int **cols, int **matching, int*nr_ptr, int*nc_ptr, int*nn_ptr)
+int main_lib_msbfsgraft(int argc, char *argv[], int **rows, int **cols, int **matching, int*nr_ptr, int*nc_ptr, int*nn_ptr, int just_read_file)
 
 {
-	if(argc != 5)
+	if(argc != 4)
 	{
-		printf("Usage: ./msBFSGraft fileName numThreads parallelKS just_read_file\n");
+		printf("Usage: ./msBFSGraft fileName numThreads parallelKS\n");
 		return -1;
 	}
     
 	int numThreads = atoi(argv[2]);
     int parallelKS = atoi(argv[3]);
-    int just_read_file = atoi(argv[4]);
 
     omp_set_num_threads(numThreads);
 #pragma omp parallel
