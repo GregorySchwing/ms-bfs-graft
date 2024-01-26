@@ -26,12 +26,17 @@
 #include "graphgenBP.h"
 #include "maximalMatching.h"
 using namespace std;
-
+#include <sys/time.h>
+double getTimeOfDay() {
+    struct timeval tv;
+    gettimeofday(&tv, NULL);
+    return (double)tv.tv_sec + (double)tv.tv_usec / 1000000.0;
+}
 
 int* MS_BFS_Graft(graph* G, int* mateI);
 
 extern "C"
-int main_lib_msbfsgraft(int argc, char *argv[], int **rows, int **cols, int **matching, int*nr_ptr, int*nc_ptr, int*nn_ptr, int just_read_file)
+int main_lib_msbfsgraft(int argc, char *argv[], int **rows, int **cols, int **matching, int*nr_ptr, int*nc_ptr, int*nn_ptr, int just_read_file, double *parse_graph_time, double *init_time)
 
 {
 	if(argc != 4)
@@ -65,7 +70,10 @@ int main_lib_msbfsgraft(int argc, char *argv[], int **rows, int **cols, int **ma
     
     graph* g = (graph *) malloc(sizeof(graph));
     //graph* g1 = (graph *) malloc(sizeof(graph));
+    double start_parse_graph = getTimeOfDay();
     process_mtx_compressed(inFile, g, rows, cols, matching, nr_ptr, nc_ptr, nn_ptr);
+    double end_parse_graph = getTimeOfDay();
+    *parse_graph_time = end_parse_graph-start_parse_graph;
     //fast_mtx_read_build(inFile,g);  // ABAB: to replace process_mtx_compressed
     //graph* g =  swap_side(tg);
     //isEqual(g,g1);
@@ -73,7 +81,7 @@ int main_lib_msbfsgraft(int argc, char *argv[], int **rows, int **cols, int **ma
         free(g);
         return 0;
     }
-    
+    double start_init = getTimeOfDay();
     int isolated_rows = 0, isolated_cols = 0;
 #pragma omp parallel
     {
@@ -123,6 +131,8 @@ int main_lib_msbfsgraft(int argc, char *argv[], int **rows, int **cols, int **ma
     
     //int* mate = MS_BFS_Graft(g, mateI); // result is stored in mate array
     *matching = MS_BFS_Graft(g, mateI); // result is stored in mate array
+    double end_init = getTimeOfDay();
+    *init_time = end_init-start_init;
     // for scaling study
     /*
     int threads[]={1,2,4,8,15,30,60,120,240};
