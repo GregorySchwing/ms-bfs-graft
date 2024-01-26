@@ -245,7 +245,7 @@ void fast_mtx_read_build(char *fname, graph* bGraph)
 }
 
 
-void process_mtx_compressed(char *fname, graph* bGraph, int **rows, int **cols, int **matching, int*nr_ptr, int*nc_ptr, int*nn_ptr)
+void process_mtx_compressed(char *fname, graph* bGraph, int **rows, int **cols, int **matching, int*nr_ptr, int*nc_ptr, int*nn_ptr,double *parse_graph_time, double *create_csr_time)
 {
 
     double time_start = omp_get_wtime();
@@ -320,9 +320,10 @@ void process_mtx_compressed(char *fname, graph* bGraph, int **rows, int **cols, 
 		}
 		inf.close();
 		
-        cout << "Serial read in " << omp_get_wtime() - time_start << endl;
+		*parse_graph_time=omp_get_wtime() - time_start;
+		cout << "Serial read in " << *parse_graph_time << endl;
+		double create_csr_start = omp_get_wtime();
 
-		
 		// reading of the input file ends
 		// build  the bipartite graph
 		
@@ -397,6 +398,7 @@ void process_mtx_compressed(char *fname, graph* bGraph, int **rows, int **cols, 
 		graphCRSVal.clear();
 		graphCCSIdx.clear();
 		graphCCSVal.clear();
+		*create_csr_time=omp_get_wtime() - create_csr_start;
 	}
 	else
     {

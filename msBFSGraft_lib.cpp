@@ -36,8 +36,7 @@ double getTimeOfDay() {
 int* MS_BFS_Graft(graph* G, int* mateI);
 
 extern "C"
-int main_lib_msbfsgraft(int argc, char *argv[], int **rows, int **cols, int **matching, int*nr_ptr, int*nc_ptr, int*nn_ptr, int just_read_file, double *parse_graph_time, double *init_time)
-
+int main_lib_msbfsgraft(int argc, char *argv[], int **rows, int **cols, int **matching, int*nr_ptr, int*nc_ptr, int*nn_ptr, int just_read_file, double *parse_graph_time, double *create_csr_time, double *init_time, int * initial_match_count)
 {
 	if(argc != 4)
 	{
@@ -71,7 +70,7 @@ int main_lib_msbfsgraft(int argc, char *argv[], int **rows, int **cols, int **ma
     graph* g = (graph *) malloc(sizeof(graph));
     //graph* g1 = (graph *) malloc(sizeof(graph));
     double start_parse_graph = getTimeOfDay();
-    process_mtx_compressed(inFile, g, rows, cols, matching, nr_ptr, nc_ptr, nn_ptr);
+    process_mtx_compressed(inFile, g, rows, cols, matching, nr_ptr, nc_ptr, nn_ptr, parse_graph_time, create_csr_time);
     double end_parse_graph = getTimeOfDay();
     *parse_graph_time = end_parse_graph-start_parse_graph;
     //fast_mtx_read_build(inFile,g);  // ABAB: to replace process_mtx_compressed
