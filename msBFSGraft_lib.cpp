@@ -143,6 +143,51 @@ int main_lib_msbfsgraft(int argc, char *argv[], int **rows, int **cols, int **ma
         free (mate);
     }
    */
+
+    #include <vector>
+    #include <algorithm>
+
+    // Assuming you have this boolean array to track matched vertices
+    std::vector<bool> matched_bool(g->n, false);
+
+    // Declare match_count vector
+    std::vector<int> match_count(g->n, 0);
+
+    // Variable to store the total number of matched vertices
+    int total_matched_vertices = 0;
+
+
+    for (int u = 0; u < g->n; u++) {
+        // Check for matching based on the conditions u % (g->n/2) and mate[u] % (g->n/2)
+        if (mateI[u] > -1 && !matched_bool[u % (g->n/2)] && !matched_bool[mateI[u] % (g->n/2)]) {
+            // Update matched information
+            matched_bool[u % (g->n/2)] = true;
+            matched_bool[mateI[u] % (g->n/2)] = true;
+
+            // Update counts
+            match_count[u%(g->n/2)]++;
+            match_count[mateI[u]% (g->n/2)]++;
+
+            // Increment the total count
+            total_matched_vertices += 2; // Two vertices are matched in each successful match
+        }
+    }
+
+    // Now, you can print or analyze the match_count vector
+    for (int r = 0; r < g->n; ++r) {
+        if (match_count[r] > 1) {
+            printf("Error: Vertex %d has more than 1 match.\n", r);
+        } else if (match_count[r] == 1) {
+            //printf("Vertex %d has 1 match.\n", r);
+        } else {
+            //printf("Vertex %d has 0 matches.\n", r);
+        }
+    }
+
+    // Print the total number of matched vertices
+    printf("Total matched vertices: %d\n", total_matched_vertices);
+    printf("Total matched edges: %d\n", total_matched_vertices/2);
+    *initial_match_count = total_matched_vertices/2;
     
 	//free_graph(g);
 	free(g);
@@ -758,10 +803,6 @@ int* MS_BFS_Graft (graph* G, int* mateI)
     printf("Bottom-UP     = %.2lf M\n", eRevAll/1000000.0);
     printf("Tree-Grafting = %.2lf M\n", eGraftAll/1000000.0);
     printf("===========================================\n");
-
-    
-    
-
     //for(int i=0; i<NV; i++)
     //{
     //    mateI[i] = mate[i];
